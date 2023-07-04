@@ -12,7 +12,7 @@
 
     @section('content')
     <div class="container-sm mt-5">
-        <form action="{{ route('employees.update', ['employee' => $employee->id]) }}" method="POST" class="needs-validation" novalidate>
+        <form action="{{ route('employees.update', ['employee' => $employee->id]) }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
             @csrf
             @method('PUT')
             <div class="row justify-content-center">
@@ -74,11 +74,23 @@
                                 @foreach ($positions as $position)
                                     <option value="{{ $position->id }}" {{ $employee->position_id == $position->id ? 'selected' : '' }}>{{ $position->code.' - '.$position->name }}</option>
                                 @endforeach
-
                             </select>
                             @error('position')
                                 <div class="text-danger"><small>{{ $message }}</small></div>
                             @enderror
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="cv" class="form-label">Curriculum Vitae (CV)</label>
+                            @if ($employee->original_filename)
+                                <h5 class="mb-3">{{ $employee->original_filename }}</h5>
+                                <a href="{{ route('employee.downloadFile', ['employeeId' => $employee->id]) }}"
+                                    class="btn btn-primary mb-3">
+                                    <i class="bi bi-download me-2"></i> Download
+                                </a>
+                            @else
+                                <h5>Tidak ada</h5>
+                            @endif
+                            <input type="file" class="form-control" name="cv" id="cv">
                         </div>
                     </div>
                     <hr>

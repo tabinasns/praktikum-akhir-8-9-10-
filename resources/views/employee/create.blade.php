@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-sm mt-5">
-        <form action="{{ route('employees.store') }}" method="POST" class="needs-validation" novalidate>
+        <form action="{{ route('employees.store') }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
             @csrf
             <div class="row justify-content-center">
                 <div class="p-5 bg-light rounded-3 border col-xl-6">
@@ -60,6 +60,13 @@
                             </select>
                             @error('position')
                                 <div class="text-danger"><small>{{ $message }}</small></div>
+                            @enderror
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="cv" class="form-label">Curriculum Vitae (CV)</label>
+                            <input type="file" class="form-control @error('cv') is-invalid @enderror" name="cv" id="cv">
+                            @error('cv')
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>

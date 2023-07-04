@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Employee;
 use App\Models\Position;
+use Illuminate\Support\Str;
+
 
 class EmployeeController extends Controller
 {
@@ -66,7 +69,7 @@ class EmployeeController extends Controller
         $messages = [
             'required' => ':Attribute harus diisi.',
             'email' => 'Isi :attribute dengan format yang benar',
-            'numeric' => 'Isi :attribute dengan angka'
+            'numeric' => 'Isi :attribute dengan angka',
         ];
 
         $validator = Validator::make($request->all(), [
@@ -89,6 +92,17 @@ class EmployeeController extends Controller
         //     'position_id' => $request->position,
         // ]);
 
+        // get file
+        $file = $request->file('cv');
+
+        if ($file != null) {
+            $originalFilename = $file->getClientOriginalName();
+            $encryptedFilename = $file->hashName();
+
+            // store file
+            $file->store('public/files');
+        }
+
         // ELQUENT MODEL
         $employee = New Employee;
         $employee->firstname = $request->firstName;
@@ -96,6 +110,12 @@ class EmployeeController extends Controller
         $employee->email = $request->email;
         $employee->age = $request->age;
         $employee->position_id = $request->position;
+
+        if ($file != null) {
+            $employee->original_filename = $originalFilename;
+            $employee->encrypted_filename = $encryptedFilename;
+        }
+
         $employee->save();
 
         return redirect()->route('employees.index');
@@ -164,7 +184,7 @@ class EmployeeController extends Controller
         $messages = [
             'required' => ':Attribute harus diisi.',
             'email' => 'Isi :attribute dengan format yang benar',
-            'numeric' => 'Isi :attribute dengan angka'
+            'numeric' => 'Isi :attribute dengan angka',
         ];
 
         $validator = Validator::make($request->all(), [
@@ -176,6 +196,17 @@ class EmployeeController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // get file
+        $file = $request->file('cv');
+
+        if ($file != null) {
+            $originalFilename = $file->getClientOriginalName();
+            $encryptedFilename = $file->hashName();
+
+            // store file
+            $file->store('public/files');
         }
 
         // QUERY BUILDER
@@ -196,6 +227,12 @@ class EmployeeController extends Controller
         $employee->email = $request->email;
         $employee->age = $request->age;
         $employee->position_id = $request->position;
+
+        if ($file != null) {
+            $employee->original_filename = $originalFilename;
+            $employee->encrypted_filename = $encryptedFilename;
+        }
+
         $employee->save();
 
         return redirect()->route('employees.index');
@@ -211,9 +248,25 @@ class EmployeeController extends Controller
         //     ->where('id', $id)
         //     ->delete();
 
+        $employee = Employee::find($id);
+        $encryptedFilename = 'public/files/' .$employee->encrypted_filename;
+        Storage::delete($encryptedFilename);
+
         // ELOQUENT MODEL
         Employee::find($id)->delete();
 
         return redirect()->route('employees.index');
     }
+
+    public function downloadFile($employeeId)
+    {
+        $employee = Employee::find($employeeId);
+        $encryptedFilename = 'public/files/'.$employee->encrypted_filename;
+        $downloadFilename = Str::lower($employee->firstname.'_'.$employee->lastname.'_cv.pdf');
+
+        if(Storage::exists($encryptedFilename)) {
+            return Storage::download($encryptedFilename, $downloadFilename);
+        }
+    }
+
 }
