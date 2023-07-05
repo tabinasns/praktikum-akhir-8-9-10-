@@ -201,6 +201,12 @@ class EmployeeController extends Controller
         // get file
         $file = $request->file('cv');
 
+        if ($file != null){
+            $employee = Employee::find($id);
+            $encryptedFilename = 'public/files/'.$employee->encrypted_filename;
+            Storage::delete($encryptedFilename);
+        }
+
         if ($file != null) {
             $originalFilename = $file->getClientOriginalName();
             $encryptedFilename = $file->hashName();
