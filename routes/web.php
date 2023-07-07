@@ -118,3 +118,12 @@ Route::get('/delete-public-file', function(Request $request) {
     Storage::disk('public')->delete('1ZY7YyqB63Gy0luyUtuluKgfD9hhpITz10GxuNSM.pdf');
     return 'Deleted';
 });
+
+// getData
+Route::get('getEmployees', [EmployeeController::class, 'getData'])->name('employees.getData');
+
+// export excel
+Route::get('exportExcel', [EmployeeController::class, 'exportExcel'])->name('employees.exportExcel');
+
+// export PDF
+Route::get('exportPdf', [EmployeeController::class, 'exportPdf'])->name('employees.exportPdf');

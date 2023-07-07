@@ -6,9 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use RealRashid\SweetAlert\Facades\Alert;
 use App\Models\Employee;
 use App\Models\Position;
-use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeesExport;
+use PDF;
 
 
 class EmployeeController extends Controller
@@ -20,6 +24,7 @@ class EmployeeController extends Controller
     {
         $pageTitle = 'Employee List';
 
+        confirmDelete();
         // RAW SQL QUERY
         // $employees = DB::select('
         //     select *, employees.id as employee_id, positions.name as position_name
@@ -33,12 +38,9 @@ class EmployeeController extends Controller
         //     ->join('positions', 'positions.id', '=', 'employees.position_id')->get();
 
         // ELOQUENT MODEL
-        $employees = Employee::all();
+        // $employees = Employee::all();
 
-        return view('employee.index', [
-            'pageTitle' => $pageTitle,
-            'employees' => $employees
-        ]);
+        return view('employee.index', compact('pageTitle'));
 
     }
 
@@ -117,6 +119,8 @@ class EmployeeController extends Controller
         }
 
         $employee->save();
+
+        Alert::success('Added Successfully', 'Employee Data Added Successfully.');
 
         return redirect()->route('employees.index');
 
@@ -241,6 +245,8 @@ class EmployeeController extends Controller
 
         $employee->save();
 
+        Alert::success('Changed Successfully', 'Employee Data Changed Successfully.');
+
         return redirect()->route('employees.index');
     }
 
@@ -261,6 +267,8 @@ class EmployeeController extends Controller
         // ELOQUENT MODEL
         Employee::find($id)->delete();
 
+        Alert::success('Deleted Successfully', 'Employee Data Deleted Successfully.');
+
         return redirect()->route('employees.index');
     }
 
@@ -275,4 +283,30 @@ class EmployeeController extends Controller
         }
     }
 
+    public function getData(Request $request)
+    {
+        $employees = Employee::with('position');
+
+        if ($request->ajax()) {
+            return datatables() ->of($employees)
+            ->addIndexColumn()
+            ->addColumn('actions', function($employee){
+                return view('employee.actions', compact('employee'));
+            })
+            ->toJson();
+        }
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(new EmployeesExport, 'employee.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $employees = Employee::all();
+        $pdf = PDF::loadView('employee.export_pdf', compact('employees'));
+
+        return $pdf->download('employees.pdf');
+    }
 }
